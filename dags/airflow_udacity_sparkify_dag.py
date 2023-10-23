@@ -8,16 +8,15 @@ from helpers import SqlQueries
 
 print("Importing Airflow Libraries Python Modules")
 
-# AWS_KEY = os.environ.get('AWS_KEY')
-# AWS_SECRET = os.environ.get('AWS_SECRET')
+AWS_KEY = os.environ.get('AWS_KEY')
+AWS_SECRET = os.environ.get('AWS_SECRET')
 
 # Preparing the Default Arguements for Airflow module DAG
 print("Preparing the Default Arguements for Airflow module DAG")
 
 default_args = {
     'owner': 'udacity_airflow_project_sparkify',
-    'start_date': datetime(2019, 1, 12),
-    # 'end_date': datetime(2019, 1, 30), ---to be enabled later	
+    'start_date': datetime(2019, 1, 12),    
     'retries':3,
     'retry_delay': timedelta(minutes = 5),
     'catchup': False,
@@ -38,7 +37,7 @@ dag = DAG('airflow_udacity_sparkify_dag',
         )
 
 # Begining with the Start Operator with the DAG execution
-print("# Begining with the Start Operator with the DAG execution")
+print("Begining with the Start Operator with the DAG execution")
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
 
@@ -148,7 +147,13 @@ run_quality_checks = DataQualityOperator(
     task_id='Run_data_quality_checks',
     dag=dag,
     redshift_conn_id = "redshift",
-    tables = ["users","songs","artists","time","songplays"]
+    data_quality_checks = [
+        {'data_check_dq_sql': 'select count(*) from public.songs where title is null', 'dq_expected_value': 0},
+        {'data_check_dq_sql': 'select count(*) from public.artists where name is null', 'dq_expected_value': 0 },
+        {'data_check_dq_sql': 'select count(*) from public.users where first_name is null', 'dq_expected_value': 0},
+        {'data_check_dq_sql': 'select count(*) from public.time where month is null', 'dq_expected_value': 0},
+        {'data_check_dq_sql': 'select count(*) from public.songsplay where userid is null', 'dq_expected_value': 0 }
+    ]
 )
 
 # End Operator to stop the DAG Execution
