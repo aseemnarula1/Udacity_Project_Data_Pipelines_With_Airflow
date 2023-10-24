@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 import os
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators import (StageToRedshiftOperator, LoadFactOperator,
-                                LoadDimensionOperator, DataQualityOperator)
+from airflow.operators import (StageToRedshiftOperator, LoadFactOperator, LoadDimensionOperator, DataQualityOperator)
+from airflow.operators.postgres_operator import PostgresOperator
 from helpers import SqlQueries
 
 print("Importing Airflow Libraries Python Modules")
@@ -15,13 +15,13 @@ AWS_SECRET = os.environ.get('AWS_SECRET')
 print("Preparing the Default Arguements for Airflow module DAG")
 
 default_args = {
-    'owner': 'udacity_airflow_project_sparkify',
-    'start_date': datetime(2019, 1, 12),    
-    'retries':3,
-    'retry_delay': timedelta(minutes = 5),
-    'catchup': False,
-    'email_on_retry': False,
-    'depends_on_past': False
+     'owner': 'udacity_airflow_project_sparkify',
+     'start_date': datetime.now(),    
+     'retries':3,
+     'retry_delay': timedelta(minutes = 5),
+     'catchup': False,
+     'email_on_retry': False,
+     'depends_on_past': False
 }
 
 # Defining DAG - airflow_udacity_sparkify_dag
@@ -30,7 +30,7 @@ print("Defining DAG - airflow_udacity_sparkify_dag")
 dag = DAG('airflow_udacity_sparkify_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-	  start_date = datetime.datetime.now(),	
+	      start_date = datetime.now(),	
           schedule_interval='0 * * * *',
           catchup = False,
           max_active_runs=1  		
@@ -41,16 +41,13 @@ print("Begining with the Start Operator with the DAG execution")
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
 
-# Creating Tables in the RedShift
-
-print("Creating Tables in the RedShift")
-
 create_tables = PostgresOperator(
     task_id='create_tables',
     dag=dag,
     postgres_conn_id="redshift",
     sql='create_tables.sql',
 )
+
 
 # Stage to RedShift Operator for Staging Events Table
 print("Stage to RedShift Operator for Staging Events Table")

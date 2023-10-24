@@ -34,13 +34,6 @@ class DataQualityOperator(BaseOperator):
 
     def execute(self, context):
 
-        self.log.info('DataQualityOperator implementation module started')
-        print("DataQualityOperator implementation module started")
-	
-	# Setting the count_error_check = 0 and initializing the redhhift connection id	
-	print("Setting the count_error_check = 0 and initializing the redhhift connection id")
-	self.log.info('Setting the count_error_check = 0 and initializing the redhhift connection id')
-
         redshift = PostgresHook(self.redshift_conn_id)
         count_error_check  = 0
         
@@ -63,7 +56,7 @@ class DataQualityOperator(BaseOperator):
             
         if count_error_check > 0:
             self.log.info('DAG Data Quality checks are failed')
-	    print("DAG Data Quality checks are failed")	
+	        
         else:
             self.log.info('DAG Data Quality checks are passed')
-	    print("'DAG Data Quality checks are passed")	
+	   
