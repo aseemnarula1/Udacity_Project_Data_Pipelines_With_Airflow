@@ -59,27 +59,26 @@ class StageToRedshiftOperator(BaseOperator):
         self.region = region
 
 # Execution Block - Stage_Redshift Operator
-    def execute(self, context):
+def execute(self, context):
 	
 # Fetching the AWS Credetentials from Airflow Vault
-	print("Fetching the AWS Credetentials from Airflow Vault")
-        self.log.info('Fetching the AWS Credetentials from Airflow Vault')
+
         aws_hook = AwsHook(self.aws_credentials_id)
-        credentials = aws_hook.get_credentials()
+        redentials = aws_hook.get_credentials()
         redshift = PostgresHook(postgres_conn_id = self.redshift_conn_id)
 
 # Deleting the Redshift Table before loading the data into it	
         self.log.info("Deleting the data from destination Redshift table")
-	print("Deleting the data from destination Redshift table")
+
         redshift.run("DELETE FROM {}".format(self.table))
         
 # Preparing the rendered key variable for the S3 Key       
         self.log.info("Preparing the rendered key variable for the S3 Key")
-    	rendered_key = self.s3_key.format(**context)
-	
+        rendered_key = self.s3_key.format(**context)	
+
 # Preparing the S3 Path
         self.log.info("Preparing the S3 path")	
-	print("Preparing the S3 Path")
+
         s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
 
 # Calling the COPY SQL command template to load the data into the staging table in the Redshift database	
@@ -97,7 +96,7 @@ class StageToRedshiftOperator(BaseOperator):
         redshift.run(formatted_sql)
 
 # Execution Block ended
-	self.log.info("Execution Block ended")
+        self.log.info("Execution Block ended")
 
 
 

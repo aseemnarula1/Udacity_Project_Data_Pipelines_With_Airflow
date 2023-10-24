@@ -43,16 +43,11 @@ class LoadDimensionOperator(BaseOperator):
         self.append_data = append_data
 
 # Execution block
-    def execute(self, context):
-	print("Starting the execution block")
+    def execute(self, context):	
         redshift_hook = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-        self.log.info(f'Loading data to the table ---> {self.table_name} dimention table.')
-
-	self.log.info('If statement for the  redshift hook run to check for the data append')
-	print("If statement for the  redshift hook run to check for the data append")
+        self.log.info(f'Adding data to {self.table_name} dimention table.')
         if self.append_data != True:
-	    print("Deleting the table data from before loading dimension table")
             redshift_hook.run(f"DELETE FROM {self.table_name}")
         redshift_hook.run(f"""INSERT INTO {self.table_name} 
                               {self.sql_statement} ;""")
-	print("Ending the execution block")
+

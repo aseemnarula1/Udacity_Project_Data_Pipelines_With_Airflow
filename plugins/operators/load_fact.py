@@ -43,21 +43,9 @@ class LoadFactOperator(BaseOperator):
 
 # Execution block - LoadFact Operator
     def execute(self, context):
-	print("Starting the execution block")
         redshift_hook = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-	
-	
-	self.log.info('If statement for the  redshift hook run to check for the data append')
-	print("If statement for the  redshift hook run to check for the data append")
         self.log.info(f'Adding data to {self.table_name} fact table.')
-
         if self.append_data  != True:
-
-            print("Deleting the table data from before loading fact table")		
             redshift_hook.run(f"DELETE FROM {self.table_name}")
-
         redshift_hook.run(f"""INSERT INTO {self.table_name} 
                               {self.sql_statement} ;""")
-
-	self.log.info('Data for the FACT table loaded')
-	print("Ending the execution block")
