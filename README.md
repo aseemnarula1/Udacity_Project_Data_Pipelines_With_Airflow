@@ -18,6 +18,7 @@ Following is the screenshot for Sparkify Udacity DAG
 # Table View List from Amazon Redshift
 
 Tables are created under the Public schema inside the “Redshift-cluster-1”
+
 ![image](https://github.com/aseemnarula1/Udacity_Project_Data_Pipelines_With_Airflow/assets/48493330/5e51799b-f138-4a57-bddd-3724c3b14da1)
 
 ## Building the DAG operators
