@@ -17,13 +17,14 @@ default_args = {
     'email_on_retry': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
-    'catchup':False
+    'catchup':False,
+    'schedule_interval': '@hourly'
 }
 
 dag = DAG('airflow_udacity_sparkify_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          schedule_interval='0 * * * *'
+          #schedule_interval='0 * * * *'
         )
 
 # Defining variables 
@@ -121,22 +122,7 @@ load_time_dimension_table = LoadDimensionOperator(
     append_data=False
 )
 
-""""
-# Running Data Quality Checks
-run_quality_checks = DataQualityOperator(
-    task_id='Run_data_quality_checks',
-    dag=dag,
-    redshift_conn_id = "redshift",
-    aws_creds_id="aws_credentials",
-    data_quality_checks = [
-        {'data_check_dq_sql': 'select count(*) from songs where title is null', 'dq_expected_value': 0},
-        {'data_check_dq_sql': 'select count(*) from artists where name is null', 'dq_expected_value': 0 },
-        {'data_check_dq_sql': 'select count(*) from users where first_name is null', 'dq_expected_value': 0},
-        {'data_check_dq_sql': 'select count(*) from time where month is null', 'dq_expected_value': 0},
-        {'data_check_dq_sql': 'select count(*) from songplays where userid is null', 'dq_expected_value': 0 }
-    ]
-)
-"""
+
 # Running Data Quality Checks
 run_quality_checks = DataQualityOperator(
     task_id='Run_data_quality_checks',
