@@ -13,5 +13,6 @@ The source data resides in S3 and needs to be processed in Sparkify’s data war
 This project needs us to use the core concepts of Apache Airflow. To complete this project, I will need to create my own custom operators to perform tasks such as staging the data, filling the data warehouse, and running checks on the data as the final step.
 
 Following is the screenshot for Sparkify Udacity DAG
+![image](https://github.com/aseemnarula1/Udacity_Project_Data_Pipelines_With_Airflow/assets/48493330/40472382-89c8-4d38-b8cf-13d0fa0cd438)
 
 
