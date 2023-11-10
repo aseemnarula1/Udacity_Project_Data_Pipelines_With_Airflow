@@ -71,5 +71,23 @@ class DataQualityOperator(BaseOperator):
         self.log.info(f"Data quality checks on table {self.input_dim_artists_table} ---> {input_dim_artists_table_records} records")
         self.log.info(f"Data quality checks on table {self.input_dim_songs_table} ---> {input_dim_songs_table_records} records")
 
-       
+        if len(input_staging_songs_table_records) < 1 :
+                raise ValueError(f"Data quality check failed. {self.input_staging_songs_table} returned no results")
         
+        if len(input_staging_events_table_records) < 1 :
+                raise ValueError(f"Data quality check failed. {self.input_staging_events_table} returned no results")
+        
+        if len(input_fact_songplays_table_records) < 1 :
+                raise ValueError(f"Data quality check failed. {self.input_fact_songplays_table} returned no results")
+        
+        if len(input_dim_users_table_records) < 1 :
+                raise ValueError(f"Data quality check failed. {self.input_dim_users_table} returned no results")
+        
+        if len(input_dim_time_table_records) < 1 :
+                raise ValueError(f"Data quality check failed. {self.input_dim_time_table} returned no results")
+        
+        if len(input_dim_songs_table_records) < 1 :
+                raise ValueError(f"Data quality check failed. {self.input_dim_songs_table} returned no results")
+        
+        if len(input_dim_artists_table_records) < 1 :
+                raise ValueError(f"Data quality check failed. {self.input_dim_artists_table} returned no results")
