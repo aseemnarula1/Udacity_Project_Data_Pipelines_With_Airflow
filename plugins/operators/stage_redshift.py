@@ -1,3 +1,4 @@
+from airflow.contrib.hooks.aws_hook import AwsHook 
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
@@ -8,16 +9,16 @@ Main Module Name - stage_redshift.py
 
 Sub Module Name - N/A
 
-Sub Module Name Description - Overloads the Class StageToRedshiftOperator with the redshift connection that loads data from AWS S3 Bucket to Redshift
+Sub Module Name Description - Overloads the Class StageToRedshiftOperator with the redshift connection for first deleting 
+                              and then inserting the data into the staging table   		
+Variables Details - 
 
-Variables Details  - 
-redshift_conn_id   - Redshift connection id from the Airflow WebUI for running the PostgresHook hooks.
-table_name  	   - Name of the staging table to be loaded
-aws_credentials_id - AWS Credentials ID setup via Airflow WebUI
-s3_bucket          - Path of the AWS S3 Bucket where source files reside
-s3_key	           - AWS S3 Key
-extra_param	   - Usuall used for specify the FORMAT option for JSON file format        
-region 		   - Area/Region/country where the S3 files are residing on the AWS servers        
+redshift_conn_id  - Redshift connection id from the Airflow WebUI for running the PostgresHook hooks.
+aws_creds_id      - AWS Credentials stored with ACCESS KEY ID and SECRET ACCESS KEY ID 
+s3_bucket         - Name of the S3 Bucket
+s3_key            - sub folder location/name 
+table_name  	  - Name of the dimension table name
+extra_params 	  - Usual DELETE/INSERT SQL statement for loading the staging data table
 
 
 '''
@@ -25,78 +26,63 @@ region 		   - Area/Region/country where the S3 files are residing on the AWS ser
 class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
     template_fields = ("s3_key",)
-
-
-# Copy SQL template for the S3 COPY FROM command
     copy_sql = """
         COPY {}
         FROM '{}'
         ACCESS_KEY_ID '{}'
-        SECRET_ACCESS_KEY '{}'
-        REGION AS '{}'
-        FORMAT AS JSON '{}'      
+        SECRET_ACCESS_KEY '{}'  
+        {}
     """
 
-# Applying the Default Arguements
     @apply_defaults
     def __init__(self,
-                 redshift_conn_id = "",
-                 aws_credentials_id = "",
-                 table = "",
-                 s3_bucket= "",
-                 s3_key = "",
-                 extra_param="",
-                 region="",
-                 *args, **kwargs):
+                 redshift_conn_id="redshift",
+                 aws_creds_id="aws_credentials",
+                 redshift_table_name="",
+                 s3_bucket="udacity-dend",
+                 s3_key="",
+                 extra_params="",
+                 *args,
+                 **kwargs
+                ):
 
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
-        self.redshift_conn_id = redshift_conn_id
-        self.aws_credentials_id = aws_credentials_id
-        self.table = table
-        self.s3_bucket = s3_bucket
-        self.s3_key = s3_key
-        self.extra_param = extra_param
-        self.region = region
+        self.redshift_conn_id    =   redshift_conn_id
+        self.aws_creds_id        =   aws_creds_id
+        self.redshift_table_name =   redshift_table_name
+        self.s3_bucket           =   s3_bucket
+        self.s3_key              =   s3_key
+        self.extra_params        =   extra_params
 
-# Execution Block - Stage_Redshift Operator
-def execute(self, context):
-	
-# Fetching the AWS Credetentials from Airflow Vault
+    def execute(self, context):
+        self.log.info('Stage RedShift module started')
 
-        aws_hook = AwsHook(self.aws_credentials_id)
-        redentials = aws_hook.get_credentials()
-        redshift = PostgresHook(postgres_conn_id = self.redshift_conn_id)
+        aws_hook    =   AwsHook(self.aws_creds_id)
+        self.log.info('Gettting AWS Credentials from the Airflow WebUI AWS Hook')
 
-# Deleting the Redshift Table before loading the data into it	
-        self.log.info("Deleting the data from destination Redshift table")
+        credentials =   aws_hook.get_credentials()
+        redshift    =   PostgresHook(postgres_conn_id=self.redshift_conn_id)
 
-        redshift.run("DELETE FROM {}".format(self.table))
-        
-# Preparing the rendered key variable for the S3 Key       
-        self.log.info("Preparing the rendered key variable for the S3 Key")
-        rendered_key = self.s3_key.format(**context)	
+        self.log.info("Clearing data from target staging Redshift table before loading the data")
+        redshift.run("DELETE FROM {}".format(self.redshift_table_name))
 
-# Preparing the S3 Path
-        self.log.info("Preparing the S3 path")	
-
+        self.log.info("Copying data from S3 to Redshift")
+        rendered_key = self.s3_key.format(**context)
         s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
-
-# Calling the COPY SQL command template to load the data into the staging table in the Redshift database	
+        self.log.info(f'S3 path: {s3_path}')
+        
+        self.log.info('Formatting SQL to be used in the StageToRedshiftOperator')
         formatted_sql = StageToRedshiftOperator.copy_sql.format(
-            self.table,
+            self.redshift_table_name,
             s3_path,
             credentials.access_key,
-            credentials.sercret_key,
-            self.region,
-            self.extra_param
+            credentials.secret_key,
+            self.extra_params
+
         )
 
-# Copying the data from the S3 Path to the Staging  Table
-        self.log.info(f" Copying data from '{s3_path}' to Staging Table ----> '{self.table}'")
+        self.log.info(formatted_sql)
         redshift.run(formatted_sql)
-
-# Execution Block ended
-        self.log.info("Execution Block ended")
-
+        self.log.info('Formatting SQL running completed')
 
 

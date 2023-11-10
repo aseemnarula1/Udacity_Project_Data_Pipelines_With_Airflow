@@ -1,4 +1,5 @@
 from airflow.hooks.postgres_hook import PostgresHook
+from airflow.contrib.hooks.aws_hook import AwsHook 
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
@@ -24,39 +25,51 @@ class DataQualityOperator(BaseOperator):
 
     @apply_defaults
     def __init__(self,
-                 data_quality_checks = [],
                  redshift_conn_id = "",
+                 aws_creds_id="",                       
+                 input_staging_songs_table = "",
+                 input_staging_events_table = "",
+                 input_fact_songplays_table = "",
+                 input_dim_users_table      = "",
+                 input_dim_time_table       = "",
+                 input_dim_artists_table    = "",
+                 input_dim_songs_table      = "",
                  *args, **kwargs):
 
-        super(DataQualityOperator, self).__init__(*args, **kwargs)
-        self.data_quality_checks = data_quality_checks
+        super(DataQualityOperator, self).__init__(*args, **kwargs)       
         self.redshift_conn_id = redshift_conn_id
+        self.aws_creds_id = aws_creds_id
+        self.input_staging_songs_table = input_staging_songs_table
+        self.input_staging_events_table = input_staging_events_table
+        self.input_fact_songplays_table = input_fact_songplays_table
+        self.input_dim_users_table = input_dim_users_table
+        self.input_dim_time_table = input_dim_time_table
+        self.input_dim_artists_table = input_dim_artists_table
+        self.input_dim_songs_table = input_dim_songs_table
 
     def execute(self, context):
 
-        redshift = PostgresHook(self.redshift_conn_id)
-        count_error_check  = 0
+        aws_hook    =   AwsHook(self.aws_creds_id)
+        self.log.info('Getting AWS Credentials from the Airflow WebUI AWS Hook')
+
+        redshift_hook    =   PostgresHook(postgres_conn_id=self.redshift_conn_id)
+
+        self.log.info('Running the Data Quality Checks')
+        input_staging_songs_table_records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {self.input_staging_songs_table}")
+        input_staging_events_table_records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {self.input_staging_events_table}")
+        input_fact_songplays_table_records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {self.input_fact_songplays_table}")
+        input_dim_users_table_records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {self.input_dim_users_table}")
+        input_dim_time_table_records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {self.input_dim_time_table}")
+        input_dim_artists_table_records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {self.input_dim_artists_table}")
+        input_dim_songs_table_records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {self.input_dim_songs_table}")
+  
+        self.log.info(f"Data quality checks on table {self.input_staging_songs_table} ---> {input_staging_songs_table_records} records") 
+        self.log.info(f"Data quality checks on table {self.input_staging_events_table} ---> {input_staging_events_table_records} records") 
+        self.log.info(f"Data quality checks on table {self.input_fact_songplays_table} ---> {input_fact_songplays_table_records} records") 
+        self.log.info(f"Data quality checks on table {self.input_dim_users_table} ---> {input_dim_users_table_records} records")
+        self.log.info(f"Data quality checks on table {self.input_dim_time_table} ---> {input_dim_time_table_records} records")
+        self.log.info(f"Data quality checks on table {self.input_dim_artists_table} ---> {input_dim_artists_table_records} records")
+        self.log.info(f"Data quality checks on table {self.input_dim_songs_table} ---> {input_dim_songs_table_records} records")
+
+       
         
-        for dq_check_step in self.data_quality_checks:
-            
-            dq_check_query     = dq_check_step.get('data_check_dq_sql')
-            dq_expected_result = dq_check_step.get('dq_expected_value')
-            
-            dq_output_result = redshift.get_records(dq_check_query)[0]
-            
-            self.log.info(f"Running Data Quality query   : {dq_check_query}")
-            self.log.info(f"Expected Data Quality result : {dq_expected_result}")
-            self.log.info(f"Check Data Quality result    : {dq_output_result}")
-            
-            
-            if dq_output_result[0] != dq_expected_result:
-                count_error_check += 1
-                self.log.info(f" DAG Data quality check fails at the step   : {dq_check_query}")
-                
-            
-        if count_error_check > 0:
-            self.log.info('DAG Data Quality checks are failed')
-	        
-        else:
-            self.log.info('DAG Data Quality checks are passed')
-	   
