@@ -33,7 +33,7 @@ class StageToRedshiftOperator(BaseOperator):
         SECRET_ACCESS_KEY '{}'  
         {}
     """
-
+# Applying Default Arguments
     @apply_defaults
     def __init__(self,
                  redshift_conn_id="redshift",
@@ -45,7 +45,7 @@ class StageToRedshiftOperator(BaseOperator):
                  *args,
                  **kwargs
                 ):
-
+# Initializing the parameters with the self operator instance
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
         self.redshift_conn_id    =   redshift_conn_id
         self.aws_creds_id        =   aws_creds_id
@@ -54,6 +54,7 @@ class StageToRedshiftOperator(BaseOperator):
         self.s3_key              =   s3_key
         self.extra_params        =   extra_params
 
+# Execution block - Stage To Redshift Operator
     def execute(self, context):
         self.log.info('Stage RedShift module started')
 

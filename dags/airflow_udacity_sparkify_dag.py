@@ -5,10 +5,29 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators import (StageToRedshiftOperator, LoadFactOperator, LoadDimensionOperator, DataQualityOperator)
 from helpers import SqlQueries
 
+'''
+
+Main Module Name - airflow_udacity_sparkify_dag.py
+
+Module Name Description - This DAG calls the Airflow Operators to load the data from S3 bucket to Redshift tables followed by
+                          loading fact and dimension tables by calling sub-modules.
+
+Sub Module Name - load_dimension.py, load_fact.py,data_quality.py, stage_redshift.py
+
+Sub Module Name Description - Overloads the Class StageToRedshiftOperator with the redshift connection for first deleting 
+                              and then inserting the data into the staging table   		
+Variables Details - N/A
+
+
+
+'''
+
+
+
 #AWS_KEY = os.environ.get('AWS_KEY')
 #AWS_SECRET = os.environ.get('AWS_SECRET')
 
-# 
+# Setting the default arguements 
 default_args = {
     'owner': 'udacity-data-engineer-nanodegree',
     'start_date': datetime.now(),
@@ -21,6 +40,7 @@ default_args = {
     'schedule_interval': '@hourly'
 }
 
+# Defining the DAG configuration
 dag = DAG('airflow_udacity_sparkify_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
@@ -80,7 +100,7 @@ load_songplays_table = LoadFactOperator(
 
 )
 
-
+# Loading the Users Dimension Table
 load_user_dimension_table = LoadDimensionOperator(
     task_id='Load_user_dim_table',
     dag=dag,
@@ -91,6 +111,7 @@ load_user_dimension_table = LoadDimensionOperator(
     append_data=False
 )
 
+# Loading the Songs Dimension Table
 load_song_dimension_table = LoadDimensionOperator(
     task_id='Load_song_dim_table',
     dag=dag,
@@ -101,7 +122,7 @@ load_song_dimension_table = LoadDimensionOperator(
     append_data=False
 )
 
-
+# Loading the Artists Dimension Table
 load_artist_dimension_table = LoadDimensionOperator(
     task_id='Load_artist_dim_table',
     dag=dag,
@@ -112,6 +133,7 @@ load_artist_dimension_table = LoadDimensionOperator(
     append_data=False
 )
 
+# Loading the Time Dimension Table
 load_time_dimension_table = LoadDimensionOperator(
     task_id='Load_time_dim_table',
     dag=dag,
@@ -139,6 +161,7 @@ run_quality_checks = DataQualityOperator(
 )
 
 
+# End Operator
 end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
 
 # DAG Task Dependency

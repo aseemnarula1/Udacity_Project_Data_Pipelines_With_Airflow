@@ -23,6 +23,7 @@ class DataQualityOperator(BaseOperator):
 
     ui_color = '#89DA59'
 
+# Applying Default Arguments
     @apply_defaults
     def __init__(self,
                  redshift_conn_id = "",
@@ -35,7 +36,8 @@ class DataQualityOperator(BaseOperator):
                  input_dim_artists_table    = "",
                  input_dim_songs_table      = "",
                  *args, **kwargs):
-
+        
+# Initializing the parameters with the self operator instance
         super(DataQualityOperator, self).__init__(*args, **kwargs)       
         self.redshift_conn_id = redshift_conn_id
         self.aws_creds_id = aws_creds_id
@@ -47,6 +49,7 @@ class DataQualityOperator(BaseOperator):
         self.input_dim_artists_table = input_dim_artists_table
         self.input_dim_songs_table = input_dim_songs_table
 
+# Execution block - Data Quality Operator
     def execute(self, context):
 
         aws_hook    =   AwsHook(self.aws_creds_id)

@@ -9,7 +9,7 @@ Main Module Name - load_fact.py
 
 Sub Module Name - N/A
 
-Sub Module Name Description - Overloads the Class LoadFactOperatorwith with the redshift connection for first deleting and then inserting the data into the fact
+Sub Module Name Description - Overloads the Class LoadFactOperator with the redshift connection for first deleting and then inserting the data into the fact
 			      table   		
 
 Variables Details - 
