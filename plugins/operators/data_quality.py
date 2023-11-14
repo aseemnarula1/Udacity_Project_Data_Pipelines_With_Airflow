@@ -35,6 +35,7 @@ class DataQualityOperator(BaseOperator):
                  input_dim_time_table       = "",
                  input_dim_artists_table    = "",
                  input_dim_songs_table      = "",
+                 data_quality_checks = [],
                  *args, **kwargs):
         
 # Initializing the parameters with the self operator instance
@@ -48,6 +49,7 @@ class DataQualityOperator(BaseOperator):
         self.input_dim_time_table = input_dim_time_table
         self.input_dim_artists_table = input_dim_artists_table
         self.input_dim_songs_table = input_dim_songs_table
+        self.data_quality_checks = data_quality_checks
 
 # Execution block - Data Quality Operator
     def execute(self, context):
@@ -94,3 +96,27 @@ class DataQualityOperator(BaseOperator):
         
         if len(input_dim_artists_table_records) < 1 :
                 raise ValueError(f"Data quality check failed. {self.input_dim_artists_table} returned no results")
+        
+        count_error  = 0
+        
+        for check_step in self.data_quality_checks:
+            
+            dq_check_query     = check_step.get('dq_check_sql')
+            expected_result = check_step.get('expected_value')
+            
+            result = redshift_hook.get_records(dq_check_query)[0]
+            
+            self.log.info(f"Running DQ query   : {dq_check_query}")
+            self.log.info(f"Expected DQ result : {expected_result}")
+            self.log.info(f"Compare result    : {result}")
+            
+            
+            if result[0] != expected_result:
+                count_error += 1
+                self.log.info(f"Data quality check fails At   : {dq_check_query}")
+                
+            
+        if count_error > 0:
+            self.log.info('DQ checks - Failed')
+        else:
+            self.log.info('DQ checks - Passed')

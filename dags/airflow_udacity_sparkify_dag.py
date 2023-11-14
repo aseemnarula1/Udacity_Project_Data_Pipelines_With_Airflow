@@ -157,7 +157,15 @@ run_quality_checks = DataQualityOperator(
     input_dim_users_table      = dim_users_table,
     input_dim_time_table       = dim_time_table,
     input_dim_artists_table    = dim_artists_table,
-    input_dim_songs_table      = dim_songs_table
+    input_dim_songs_table      = dim_songs_table,
+    data_quality_checks=
+        [       
+        {'dq_check_sql': 'select count(*) from songs where title is null', 'expected_value': 0},
+        {'dq_check_sql': 'select count(*) from artists where name is null', 'expected_value': 0 },
+        {'dq_check_sql': 'select count(*) from users where first_name is null', 'expected_value': 0},
+        {'dq_check_sql': 'select count(*) from time where month is null', 'expected_value': 0},
+        {'dq_check_sql': 'select count(*) from songsplay where userid is null', 'expected_value': 0 }
+        ]
 )
 
 
